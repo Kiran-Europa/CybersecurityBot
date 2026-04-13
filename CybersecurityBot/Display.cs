@@ -5,6 +5,7 @@ namespace CybersecurityBot
 {
     static class Display
     {
+        // writes text in a chosen colour without moving to a new line
         public static void Write(string text, ConsoleColor colour)
         {
             Console.ForegroundColor = colour;
@@ -12,6 +13,7 @@ namespace CybersecurityBot
             Console.ResetColor();
         }
 
+        // writes text in a chosen colour and moves to the next line
         public static void WriteLine(string text, ConsoleColor colour)
         {
             Console.ForegroundColor = colour;
@@ -19,28 +21,32 @@ namespace CybersecurityBot
             Console.ResetColor();
         }
 
+        // prints text one character at a time to look like typing
         public static void TypeWrite(string text, ConsoleColor colour = ConsoleColor.White, int delayMs = 18)
         {
             Console.ForegroundColor = colour;
             foreach (char c in text)
             {
                 Console.Write(c);
-                Thread.Sleep(delayMs);
+                Thread.Sleep(delayMs); // small delay between each character
             }
             Console.ResetColor();
             Console.WriteLine();
         }
 
+        // prints a thick divider line across the console
         public static void ShowDivider()
         {
             WriteLine(new string('═', 60), ConsoleColor.DarkCyan);
         }
 
+        // prints a thin divider line across the console
         public static void ShowThinDivider()
         {
             WriteLine(new string('─', 60), ConsoleColor.DarkGray);
         }
 
+        // clears the screen and prints the ASCII art logo
         public static void ShowLogo()
         {
             Console.Clear();
@@ -63,6 +69,7 @@ namespace CybersecurityBot
             Console.WriteLine();
         }
 
+        // shows a personalised welcome message after the user enters their name
         public static void ShowWelcomeBanner(string userName)
         {
             ShowDivider();
@@ -76,6 +83,7 @@ namespace CybersecurityBot
             Console.WriteLine();
         }
 
+        // prints the list of topics the bot can answer questions about
         public static void ShowHelp()
         {
             ShowDivider();
@@ -89,11 +97,13 @@ namespace CybersecurityBot
             Console.WriteLine();
         }
 
+        // prints the [BOT] label before a response
         public static void PrintBotLabel()
         {
             Write("  [BOT] ", ConsoleColor.Cyan);
         }
 
+        // prints the users name as the input prompt
         public static void PrintUserPrompt(string userName)
         {
             Console.WriteLine();

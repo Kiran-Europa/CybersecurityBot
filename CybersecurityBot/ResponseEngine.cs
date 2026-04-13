@@ -5,6 +5,7 @@ namespace CybersecurityBot
 {
     static class ResponseEngine
     {
+        // list of rules - each rule has a set of keywords and a matching response
         private static readonly List<(string[] keywords, string response)> Rules = new()
         {
             (
@@ -39,6 +40,7 @@ namespace CybersecurityBot
                 "  - Keep your browser and extensions up to date.\n" +
                 "  - Avoid sensitive accounts on public Wi-Fi without a VPN."
             ),
+            // null response means the help menu should be shown instead
             (
                 new[] { "help", "topics", "menu" },
                 null
@@ -49,23 +51,28 @@ namespace CybersecurityBot
         {
             isHelp = false;
 
+            // handle empty input
             if (string.IsNullOrWhiteSpace(input))
                 return "I didn't quite understand that. Could you rephrase?";
 
+            // convert to lowercase so matching works regardless of how user typed it
             string normalised = input.Trim().ToLowerInvariant();
 
+            // loop through each rule and check if the input contains any of its keywords
             foreach (var (keywords, response) in Rules)
             {
                 foreach (string keyword in keywords)
                 {
                     if (normalised.Contains(keyword))
                     {
+                        // if response is null it means show the help menu
                         if (response == null) { isHelp = true; return null; }
                         return response;
                     }
                 }
             }
 
+            // nothing matched so return a default message
             return $"I didn't understand '{input.Trim()}'. Type 'help' to see what I can answer.";
         }
     }
