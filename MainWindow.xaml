@@ -1,0 +1,95 @@
+﻿<Window x:Class="CybersecurityBotGUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Cybersecurity Awareness Bot"
+        Height="700" Width="850"
+        Background="#0d0d0d"
+        WindowStartupLocation="CenterScreen"
+        Loaded="Window_Loaded">
+    <!-- Runs when window opens -->
+
+    <Window.Resources>
+        <!-- Style for input box: dark background, cyan text -->
+        <Style x:Key="InputStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="#1a1a2e"/>
+            <Setter Property="Foreground" Value="#00ffcc"/>
+            <Setter Property="CaretBrush" Value="#00ffcc"/>
+            <Setter Property="BorderBrush" Value="#00ffcc"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="8"/>
+        </Style>
+        <!-- Style for send button: cyan background, bold text -->
+        <Style x:Key="SendButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#00ffcc"/>
+            <Setter Property="Foreground" Value="#0d0d0d"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="16,8"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- ASCII art -->
+            <RowDefinition Height="Auto"/>
+            <!-- Sentiment status -->
+            <RowDefinition Height="*"/>
+            <!-- Chat area -->
+            <RowDefinition Height="Auto"/>
+            <!-- Input row -->
+        </Grid.RowDefinitions>
+
+        <!-- ASCII art logo -->
+        <TextBlock x:Name="AsciiLogo" Grid.Row="0"
+                   FontFamily="Consolas" FontSize="11"
+                   Foreground="#00ffcc"
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,8"
+                   Text="&#10;  ==============================================&#10;  ||   CYBERSECURITY  AWARENESS  BOT          ||&#10;  ||              /\                          ||&#10;  ||             /  \                         ||&#10;  ||            / ## \                        ||&#10;  ||           /######\                       ||&#10;  ||           \______/                       ||&#10;  ||        STAY SAFE ONLINE                  ||&#10;  =============================================="/>
+
+        <!-- Shows detected mood (worried/curious/frustrated) -->
+        <TextBlock x:Name="StatusLabel" Grid.Row="1"
+                   FontFamily="Consolas" FontSize="12"
+                   Foreground="#888"
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,8"
+                   Text="Ready"/>
+
+        <!-- Scrollable chat history -->
+        <Border Grid.Row="2" BorderBrush="#00ffcc" BorderThickness="1" Margin="0,0,0,10">
+            <ScrollViewer x:Name="ChatScroller" VerticalScrollBarVisibility="Auto">
+                <RichTextBox x:Name="ChatBox"
+                             Background="#0d0d0d"
+                             Foreground="#ffffff"
+                             FontFamily="Consolas"
+                             FontSize="13"
+                             IsReadOnly="True"
+                             BorderThickness="0"
+                             Padding="10"/>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Input field and Send button -->
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="InputBox" Grid.Column="0"
+                     Style="{StaticResource InputStyle}"
+                     KeyDown="InputBox_KeyDown"/>
+            <!-- Enter key sends -->
+            <Button x:Name="SendButton" Grid.Column="1"
+                    Content="SEND"
+                    Style="{StaticResource SendButtonStyle}"
+                    Margin="8,0,0,0"
+                    Click="SendButton_Click"/>
+        </Grid>
+    </Grid>
+</Window>
