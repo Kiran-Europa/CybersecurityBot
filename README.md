@@ -12,3 +12,8 @@ Version 0-10: Added Memory recall
 Version 0-11: Added Insults
 Version 0-12: Added more cyber security tips
 Version 0-13: Added 2 dialogue options to display additional tips
+Version 0-15: Added activity log
+Version 0-16: Added minigame
+Version 0-17: Added task assistant
+Version 0-18: Added database integration
+Version 0-19: Added NLP Helper 
