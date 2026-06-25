@@ -16,7 +16,7 @@ namespace CybersecurityBotGUI
     static class DatabaseHelper
     {
         private const string ConnectionString =
-            "Server=localhost;Database=cybersecurity_bot;Uid=root;Pwd=KobbieGoat37;";
+            "Server=localhost;Database=cybersecurity_bot;Uid=root;Pwd=FakePswd;";
 
         public static bool AddTask(string title, string description, DateTime? reminderDate)
         {
