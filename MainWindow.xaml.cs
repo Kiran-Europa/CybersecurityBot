@@ -10,17 +10,18 @@ namespace CybersecurityBotGUI
 {
     public partial class MainWindow : Window
     {
-        private string _userName = "";          // User's name (remembered)
-        private bool _awaitingName = true;      // First message asks for name
-        private string _rememberedTopic = "";   // Favourite topic (memory)
-        private string _lastTopic = "";         // Last discussed topic (for follow‑ups)
+        private string _userName = "";          // user's name once entered
+        private bool _awaitingName = true;      // first message is always asking for the name
+        private string _rememberedTopic = "";   // topic the user said they're interested in
+        private string _lastTopic = "";         // last topic discussed, used for follow-ups
+        private QuizEngine _quiz = new QuizEngine();
 
         public MainWindow()
         {
             InitializeComponent();
         }
 
-        // Called when window loads – plays greeting sound and asks for name
+        // runs on startup - plays the greeting and asks for the user's name
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             AudioPlayer.PlayGreeting();
@@ -33,7 +34,6 @@ namespace CybersecurityBotGUI
             if (e.Key == Key.Enter) ProcessInput();
         }
 
-        // Main conversation handler
         private void ProcessInput()
         {
             string input = InputBox.Text.Trim();
@@ -41,7 +41,7 @@ namespace CybersecurityBotGUI
 
             InputBox.Clear();
 
-            // First input is always the name
+            // first input is always the name
             if (_awaitingName)
             {
                 _userName = input;
@@ -51,34 +51,127 @@ namespace CybersecurityBotGUI
                 return;
             }
 
-            // Show user message
+            // show the user's message
             AppendMessage(_userName, input, "#ffff00");
 
-            // Detect sentiment and update status bar
+            // if a quiz is active, treat input as an answer instead of a normal message
+            if (_quiz.IsActive)
+            {
+                if (_quiz.LooksLikeAnswer(input))
+                {
+                    string quizResponse = _quiz.SubmitAnswer(input, out bool finished);
+                    AppendMessage("BOT", quizResponse, finished ? "#00ffcc" : "#88ccff");
+                    ActivityLog.Add(finished
+                        ? $"Quiz completed - scored {_quiz.Score}/{_quiz.QuestionsAnswered}."
+                        : $"Quiz question {_quiz.QuestionsAnswered} answered.");
+                    ChatScroller.ScrollToBottom();
+                }
+                else
+                {
+                    AppendMessage("BOT", "Please answer with a letter (e.g. 'A', 'B', 'C'...) to continue the quiz.", "#ff9944");
+                }
+                return;
+            }
+
+            // check if the user wants to start the quiz
+            if (NlpHelper.MatchesIntent(input, "quiz"))
+            {
+                string firstQuestion = _quiz.StartQuiz();
+                AppendMessage("BOT", "Let's test your cybersecurity knowledge! I'll ask you 12 questions.", "#00ffcc");
+                AppendMessage("BOT", firstQuestion, "#88ccff");
+                ActivityLog.Add("Quiz started.");
+                ChatScroller.ScrollToBottom();
+                return;
+            }
+
+            // check if the user wants to view the activity log
+            if (ActivityLog.IsViewLogCommand(input))
+            {
+                bool showAll = ActivityLog.IsShowMoreCommand(input);
+                AppendMessage("BOT", ActivityLog.FormatLog(showAll), "#88ccff");
+                ChatScroller.ScrollToBottom();
+                return;
+            }
+
+            // detect sentiment and update the status bar
             string sentiment = SentimentDetector.Detect(input);
             UpdateStatus(sentiment);
 
-            // Store favourite topic if mentioned
+            // store favourite topic if mentioned
             MemoryEngine.CheckAndStore(input, ref _rememberedTopic);
 
-            // Get bot response (handles keywords, follow‑ups, random tips)
-            string response = ResponseEngine.GetResponse(input, _rememberedTopic, _lastTopic, out string newTopic);
+            // check for task assistant commands first
+            string response;
+            string newTopic = _lastTopic;
+
+            if (TaskAssistant.IsViewTasksCommand(input))
+            {
+                response = TaskAssistant.FormatTaskList();
+            }
+            else if (TaskAssistant.IsCompleteTaskCommand(input))
+            {
+                int? id = TaskAssistant.ExtractTaskId(input);
+                if (id.HasValue && DatabaseHelper.CompleteTask(id.Value))
+                {
+                    response = $"Marked task #{id} as completed. Great job staying on top of your security!";
+                    ActivityLog.Add($"Task #{id} marked as completed.");
+                }
+                else
+                    response = "I couldn't find that task. Try 'show tasks' to see the list with IDs.";
+            }
+            else if (TaskAssistant.IsDeleteTaskCommand(input))
+            {
+                int? id = TaskAssistant.ExtractTaskId(input);
+                if (id.HasValue && DatabaseHelper.DeleteTask(id.Value))
+                {
+                    response = $"Deleted task #{id}.";
+                    ActivityLog.Add($"Task #{id} deleted.");
+                }
+                else
+                    response = "I couldn't find that task. Try 'show tasks' to see the list with IDs.";
+            }
+            else if (TaskAssistant.IsAddTaskCommand(input))
+            {
+                string title = TaskAssistant.ExtractTaskTitle(input);
+                DateTime? reminder = TaskAssistant.ExtractReminderDate(input);
+                bool ok = DatabaseHelper.AddTask(title, title, reminder);
+
+                if (ok)
+                {
+                    response = reminder.HasValue
+                        ? $"Task added: '{title}'. Reminder set for {reminder.Value:dd MMM yyyy}."
+                        : $"Task added: '{title}'. Would you like to set a reminder for this task?";
+                    ActivityLog.Add(reminder.HasValue
+                        ? $"Task added: '{title}' (Reminder set for {reminder.Value:dd MMM yyyy})."
+                        : $"Task added: '{title}' (no reminder set).");
+                }
+                else
+                {
+                    response = "I couldn't save that task - please check the database connection.";
+                }
+            }
+            else
+            {
+                // fall back to the normal response engine
+                response = ResponseEngine.GetResponse(input, _rememberedTopic, _lastTopic, out newTopic);
+            }
+
             _lastTopic = newTopic;
 
-            // Add empathy line if user is worried or frustrated
+            // add empathy line if the user seems worried or frustrated
             if (sentiment == "worried" || sentiment == "frustrated")
             {
                 AppendMessage("BOT", SentimentDetector.GetEmpathyLine(sentiment), "#ff9944");
             }
 
-            // Show main response
+            // show the main response
             AppendMessage("BOT", response, "#00ffcc");
 
-            // Auto‑scroll to bottom
+            // scroll to the bottom
             ChatScroller.ScrollToBottom();
         }
 
-        // Add a formatted message to chat (sender label in colour, message in white)
+        // adds a message to the chat, sender name in colour, message in white
         private void AppendMessage(string sender, string message, string hexColour)
         {
             var paragraph = new Paragraph { Margin = new Thickness(0, 4, 0, 4) };
@@ -93,14 +186,14 @@ namespace CybersecurityBotGUI
             ChatBox.Document.Blocks.Add(paragraph);
         }
 
-        // Update the top status label based on detected sentiment
+        // changes the status text and colour based on detected mood
         private void UpdateStatus(string sentiment)
         {
             StatusLabel.Text = sentiment switch
             {
-                "worried" => "Mood detected: Worried — I'll be extra supportive!",
-                "curious" => "Mood detected: Curious — great, let's explore!",
-                "frustrated" => "Mood detected: Frustrated — I'll keep it simple.",
+                "worried" => "Mood detected: Worried - I'll be extra supportive!",
+                "curious" => "Mood detected: Curious - great, let's explore!",
+                "frustrated" => "Mood detected: Frustrated - I'll keep it simple.",
                 _ => "Ready"
             };
 

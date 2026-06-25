@@ -2,9 +2,6 @@
 
 namespace CybersecurityBotGUI
 {
-    /// <summary>
-    /// Detects user mood (worried, curious, frustrated, neutral) and returns empathy text.
-    /// </summary>
     static class SentimentDetector
     {
         static readonly List<string> WorriedWords = new()
@@ -25,9 +22,7 @@ namespace CybersecurityBotGUI
             "don't understand", "this is hard", "complicated", "difficult"
         };
 
-        /// <summary>
-        /// Returns "worried", "frustrated", "curious", or "neutral".
-        /// </summary>
+        // checks the input against each word list and returns the matching mood
         public static string Detect(string input)
         {
             string lower = input.ToLowerInvariant();
@@ -44,15 +39,12 @@ namespace CybersecurityBotGUI
             return "neutral";
         }
 
-        /// <summary>
-        /// Returns a supportive sentence for worried or frustrated users.
-        /// </summary>
         public static string GetEmpathyLine(string sentiment)
         {
             return sentiment switch
             {
                 "worried" => "It's completely understandable to feel that way. Let me help put your mind at ease.",
-                "frustrated" => "I hear you — cybersecurity can feel overwhelming. Let's break it down simply.",
+                "frustrated" => "I hear you - cybersecurity can feel overwhelming. Let's break it down simply.",
                 _ => ""
             };
         }
